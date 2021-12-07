@@ -10,6 +10,8 @@ from torch.nn import functional as F
 from torch.nn.functional import mse_loss, l1_loss, binary_cross_entropy, cross_entropy
 from torch.optim import Optimizer
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 class NBeatsNet(nn.Module):
     SEASONALITY_BLOCK = 'seasonality'
@@ -133,23 +135,6 @@ def squeeze_last_dim(tensor):
     return tensor
 
 
-def seasonality_model(thetas, t, device):
-    p = thetas.size()[-1]
-    assert p <= thetas.shape[1], 'thetas_dim is too big.'
-    p1, p2 = (p // 2, p // 2) if p % 2 == 0 else (p // 2, p // 2 + 1)
-    s1 = torch.tensor([np.cos(2 * np.pi * i * t) for i in range(p1)]).float()  # H/2-1
-    s2 = torch.tensor([np.sin(2 * np.pi * i * t) for i in range(p2)]).float()
-    S = torch.cat([s1, s2])
-    return thetas.mm(S.to(device))
-
-
-def trend_model(thetas, t, device):
-    p = thetas.size()[-1]
-    assert p <= 4, 'thetas_dim is too big.'
-    T = torch.tensor([t ** i for i in range(p)]).float()
-    return thetas.mm(T.to(device))
-
-
 def linear_space(backcast_length, forecast_length):
     ls = np.arange(-backcast_length, forecast_length, 1) / forecast_length
     b_ls = np.abs(np.flip(ls[:backcast_length]))
@@ -203,11 +188,20 @@ class SeasonalityBlock(Block):
         else:
             super(SeasonalityBlock, self).__init__(units, forecast_length, device, backcast_length,
                                                    forecast_length, share_thetas=True)
+    @staticmethod
+    def seasonality_model(thetas, t, device):
+        p = thetas.size()[-1]
+        assert p <= thetas.shape[1], 'thetas_dim is too big.'
+        p1, p2 = (p // 2, p // 2) if p % 2 == 0 else (p // 2, p // 2 + 1)
+        s1 = torch.tensor([np.cos(2 * np.pi * i * t) for i in range(p1)]).float()  # H/2-1
+        s2 = torch.tensor([np.sin(2 * np.pi * i * t) for i in range(p2)]).float()
+        S = torch.cat([s1, s2])
+        return thetas.mm(S.to(device))
 
     def forward(self, x):
         x = super(SeasonalityBlock, self).forward(x)
-        backcast = seasonality_model(self.theta_b_fc(x), self.backcast_linspace, self.device)
-        forecast = seasonality_model(self.theta_f_fc(x), self.forecast_linspace, self.device)
+        backcast = self.seasonality_model(self.theta_b_fc(x), self.backcast_linspace, self.device)
+        forecast = self.seasonality_model(self.theta_f_fc(x), self.forecast_linspace, self.device)
         return backcast, forecast
 
 
@@ -217,18 +211,27 @@ class TrendBlock(Block):
         super(TrendBlock, self).__init__(units, thetas_dim, device, backcast_length,
                                          forecast_length, share_thetas=True)
 
+    @staticmethod
+    def trend_model(thetas, t, device):
+        p = thetas.size()[-1]
+        assert p <= 4, 'thetas_dim is too big.'
+        T = torch.tensor([t ** i for i in range(p)]).float()
+        return thetas.mm(T.to(device))
+
     def forward(self, x):
         x = super(TrendBlock, self).forward(x)
-        backcast = trend_model(self.theta_b_fc(x), self.backcast_linspace, self.device)
-        forecast = trend_model(self.theta_f_fc(x), self.forecast_linspace, self.device)
+        backcast = self.trend_model(self.theta_b_fc(x), self.backcast_linspace, self.device)
+        forecast = self.trend_model(self.theta_f_fc(x), self.forecast_linspace, self.device)
         return backcast, forecast
 
 
 class GenericBlock(Block):
+    """
 
+    """
     def __init__(self, units, thetas_dim, device, backcast_length=10, forecast_length=5, nb_harmonics=None):
         super(GenericBlock, self).__init__(units, thetas_dim, device, backcast_length, forecast_length)
-
+        # projecting the b and f to result
         self.backcast_fc = nn.Linear(thetas_dim, backcast_length)
         self.forecast_fc = nn.Linear(thetas_dim, forecast_length)
 
@@ -245,4 +248,12 @@ class GenericBlock(Block):
         return backcast, forecast
 
 if __name__ == "__main__":
-    test_x = torch.randn(32, 15)
+    test_x = torch.randn(32, 15).to(device)
+    model = NBeatsNet(backcast_length=15, forecast_length=5,
+                      stack_types=(NBeatsNet.GENERIC_BLOCK, NBeatsNet.SEASONALITY_BLOCK, NBeatsNet.TREND_BLOCK), nb_blocks_per_stack=3,
+                      thetas_dim=(4, 4, 4), share_weights_in_stack=True, hidden_layer_units=64)
+
+    output = model(test_x)
+
+
+
