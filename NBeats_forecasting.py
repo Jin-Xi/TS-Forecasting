@@ -1,17 +1,12 @@
 import logging
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 import torch
 from torch import optim
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
-import numpy as np
 
 # from utils.losses import smape_2_loss, mape_loss, mase_loss
-from N_Beats import NBeatsNet
+from model.N_Beats import NBeatsNet
 from data.datasets.time_series import time_series
 
 from utils.test_model import test_NBeats as test
