@@ -35,7 +35,8 @@ def train(model, input_len, output_len):
         count = 0
         total_loss = 0
         net.train()
-        for x, y in train_dataloader:
+        train_bar = tqdm(train_dataloader)
+        for x, y in train_bar:
             optimizer.zero_grad()
             out = model(x.cuda())
             loss = loss_fn(out, y.cuda())
@@ -49,7 +50,8 @@ def train(model, input_len, output_len):
                 total_loss /= count
                 count = 0
                 # scheduler.step(total_loss)
-                print('[training] [epoch:{}/{} , iter:{}, total_loss:{}]'.format(epoch, 1000, global_step, total_loss))
+                train_bar.desc = '[training] [epoch:{}/{} , iter:{}, total_loss:{}]'\
+                    .format(epoch, 1000, global_step, total_loss)
                 total_loss = 0
 
             optimizer.step()
