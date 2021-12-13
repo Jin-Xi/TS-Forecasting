@@ -13,7 +13,7 @@ def plot_pred_and_real(pred_data, real_data, epoch, save_img=False):
     plt.ylabel('y')
     plt.plot(real_data, "blue", label="real data")
     plt.plot(pred_data, "green", label='pred data')
-    plt.title("[MSE:{}] / [MAE:{}]".format(mse, mape))
+    plt.title("[MSE:{}] / [MAPE:{}]".format(mse, mape))
     plt.legend()
     if save_img:
         plt.savefig('./animation/DeepAR_beta2/' + str(epoch) + '.jpg')

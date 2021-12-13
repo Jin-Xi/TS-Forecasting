@@ -14,12 +14,13 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class NBeatsNet(nn.Module):
+
     SEASONALITY_BLOCK = 'seasonality'
     TREND_BLOCK = 'trend'
     GENERIC_BLOCK = 'generic'
 
     def __init__(self,
-                 device=torch.device('cpu'),
+                 device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                  stack_types=(TREND_BLOCK, SEASONALITY_BLOCK),
                  nb_blocks_per_stack=3,
                  forecast_length=5,
