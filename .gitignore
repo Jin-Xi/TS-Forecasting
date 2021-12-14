@@ -141,3 +141,5 @@ cython_debug/
 animation/
 graph/
 
+test.ipynb
+doc/

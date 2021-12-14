@@ -1,8 +1,8 @@
 ## 实现了各种简单的序列预测模型
 + AR
-    + ARMM
+    + ARMA
     + ARIMA
-    + ARIMAX(带实现)
+    + ARIMAX (×)
     + ...
 + MLP
 + RNN
@@ -13,7 +13,7 @@
     
 + Transformer (Attention based models)
     + Vanilla Transformer
-    + Informer
+    + Informer (×)
 
 + Others
     + N-Beats

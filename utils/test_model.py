@@ -37,7 +37,7 @@ def test_RNNS(net, epoch, vali_dataloader):
     return vali_loss
 
 
-def test_Transformer(net, epoch, vali_dataloader):
+def test_TransformerEncoder(net, epoch, vali_dataloader, pred_len=1):
     net.eval()
 
     forecast = []
@@ -45,7 +45,7 @@ def test_Transformer(net, epoch, vali_dataloader):
 
     for input, target in vali_dataloader:
         input = input.cuda()
-        fore = net(input)
+        fore = net(input.unsqueeze(-1))[:, -pred_len:, :]
         forecast.append(fore)
         real.append(target)
 
