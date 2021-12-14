@@ -22,7 +22,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def train(net, input_len, output_len, decoder_len):
     optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
     loss_fn = nn.MSELoss()
-
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
     train_dataset = time_series(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='train')
     train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
     vali_dataset = time_series(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='test')
@@ -62,15 +62,13 @@ def train(net, input_len, output_len, decoder_len):
         # test
         if epoch % 10 == 0:
             vali_loss = test(net, epoch, vali_dataloader, pred_len=output_len)
+            scheduler.step(vali_loss)
 
 
 if __name__ == "__main__":
-    input_len, output_len, decoder_len = 100, 5, 10
+    input_len, output_len, decoder_len = 100, 10, 40
     model = Net(feature_size=256, num_layers=1, dropout=0.1,
                 pred_len=output_len, encoder_len=input_len, decoder_len=decoder_len,
                 device=device).cuda()
     train(model, input_len, output_len, decoder_len)
-    # 使用3层的transformer encoder输出就是一条直线
-    # 使用2层的transformer encoder输出
-    # 使用1层的transformer encoder 输出就和LSTM大差不差
-    # 如果input_len太小 输出近似为直线
+    # 多尝试input_len, output_len, decoder_len的组合，有一些组合会只输出直线
