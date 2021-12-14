@@ -7,9 +7,9 @@ from tqdm import tqdm
 
 from sklearn.preprocessing import MinMaxScaler
 
-from utils.test_model import test_TransformerEncoder as test
-from data.datasets.time_series import time_series as time_series
-from model.vanillaTransformer import time_TransformerEncoder as Net
+from utils.test_model import test_Transformer as test
+from data.datasets.time_series import time_series2 as time_series
+from model.Transformer import time_Transformer as Net
 
 """
 different for previous version, in this model we try a real seq2seq model
@@ -19,7 +19,7 @@ torch.manual_seed(888)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def train(net, input_len, output_len):
+def train(net, input_len, output_len, decoder_len):
     optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
     loss_fn = nn.MSELoss()
 
@@ -37,10 +37,10 @@ def train(net, input_len, output_len):
         train_bar = tqdm(train_dataloader)
         for input, target in train_bar:
             input = input.unsqueeze(-1).cuda()
-            target = torch.cat([input, target.cuda().unsqueeze(-1)], dim=1)[:, output_len:]
+            target = target.unsqueeze(-1).cuda()
             optimizer.zero_grad()
 
-            output = net(input)
+            output = net(input)[:, -output_len:, :]
 
             loss = loss_fn(output, target)
             loss.backward()
@@ -48,9 +48,8 @@ def train(net, input_len, output_len):
             total_loss += loss.item()
             count += 1
             global_step += 1
-
-
-            # torch.nn.utils.clip_grad_norm_(net.parameters(), 0.7)
+            # grad_clip
+            torch.nn.utils.clip_grad_norm_(net.parameters(), 0.1)
             optimizer.step()
 
             if count % 10 == 0:
@@ -66,9 +65,11 @@ def train(net, input_len, output_len):
 
 
 if __name__ == "__main__":
-    input_len, output_len = 100, 5
-    model = Net(feature_size=256, num_layers=1, dropout=0.1, pred_len=output_len, device=device).cuda()
-    train(model, input_len, output_len)
+    input_len, output_len, decoder_len = 100, 5, 10
+    model = Net(feature_size=256, num_layers=1, dropout=0.1,
+                pred_len=output_len, encoder_len=input_len, decoder_len=decoder_len,
+                device=device).cuda()
+    train(model, input_len, output_len, decoder_len)
     # 使用3层的transformer encoder输出就是一条直线
     # 使用2层的transformer encoder输出
     # 使用1层的transformer encoder 输出就和LSTM大差不差

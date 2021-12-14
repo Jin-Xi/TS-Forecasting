@@ -4,6 +4,13 @@ import math
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
+
+def _generate_square_subsequent_mask(sz):
+    mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
+    mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+    return mask
+
+
 class PositionalEncoding(nn.Module):
     def __init__(self,
                  emb_size: int,
@@ -59,53 +66,56 @@ class time_TransformerEncoder(nn.Module):
         emb = self.TokenEmbedding(x)
         x = self.pos_encoder(emb)
         if self.input_mask is None or x.shape[1] != len(self.input_mask):
-            self.input_mask = self._generate_square_subsequent_mask(x.shape[1]).to(self.device)
+            self.input_mask = _generate_square_subsequent_mask(x.shape[1]).to(self.device)
 
         output = self.encoder(src=x, mask=self.input_mask)
         output = self.output_transformation(output)
         return output
 
-    def _generate_square_subsequent_mask(self, sz):
-        mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
-        return mask
-
 
 class time_Transformer(nn.Module):
-    def __init__(self, input_size=1, feature_size=256, num_layers=3, dropout=0.1, pred_len=10, device=device):
+   def __init__(self, input_size=1, feature_size=256, num_layers=1, dropout=0.1,
+                pred_len=10, encoder_len=100, decoder_len=20,
+                device=device):
         super(time_Transformer, self).__init__()
+        self.encoder_len = encoder_len
         self.pred_len = pred_len
+        self.decoder_len = decoder_len
         self.feature_size = feature_size
         self.device = device
 
-        self.input_mask = None
+        self.decoder_mask = None
         self.TokenEmbedding = TokenEmbedding(input_size=input_size, emb_size=feature_size)
         self.pos_encoder = PositionalEncoding(feature_size, dropout=0.1)
 
         encoder_layer = nn.TransformerEncoderLayer(d_model=feature_size, nhead=8, dropout=dropout, batch_first=True)
         self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+
+        decoder_layer = nn.TransformerDecoderLayer(d_model=feature_size, nhead=8, dropout=dropout, batch_first=True)
+        self.decoder = nn.TransformerDecoder(decoder_layer, num_layers=num_layers)
         self.output_transformation = nn.Linear(feature_size, 1)
         # self.init_weights()
 
-    def init_weights(self):
+   def init_weights(self):
         initrange = 0.1
         self.output_transformation.bias.data.zero_()
         self.output_transformation.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, x):
-        emb = self.TokenEmbedding(x)
+   def forward(self, input):
+        input = torch.cat([input, torch.zeros(input.shape[0], self.pred_len, input.shape[2]).to(input.device)], dim=1)
+        emb = self.TokenEmbedding(input)
         x = self.pos_encoder(emb)
-        if self.input_mask is None or x.shape[1] != len(self.input_mask):
-            self.input_mask = self._generate_square_subsequent_mask(x.shape[1]).to(self.device)
 
-        output = self.encoder(src=x, mask=self.input_mask)
+        encoder_input = x[:, :self.encoder_len, :]
+        decoder_input = x[:, -self.decoder_len:, :]
+
+        if self.decoder_mask is None:
+            self.decoder_mask = _generate_square_subsequent_mask(decoder_input.shape[1]).to(x.device)
+
+        memory = self.encoder(encoder_input)
+        output = self.decoder(decoder_input, memory)
         output = self.output_transformation(output)
         return output
-
-    def _generate_square_subsequent_mask(self, sz):
-        mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
-        return mask
 
 
 if __name__ == "__main__":
