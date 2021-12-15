@@ -66,7 +66,7 @@ def train(net, input_len, output_len, decoder_len):
 
 
 if __name__ == "__main__":
-    input_len, output_len, decoder_len = 100, 10, 40
+    input_len, output_len, decoder_len = 200, 40, 80
     model = Net(feature_size=256, num_layers=1, dropout=0.1,
                 pred_len=output_len, encoder_len=input_len, decoder_len=decoder_len,
                 device=device).cuda()
