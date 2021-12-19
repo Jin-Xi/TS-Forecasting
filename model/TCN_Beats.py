@@ -153,7 +153,7 @@ class Block(nn.Module):
         self.thetas_dim = thetas_dim
         self.backcast_length = backcast_length
         self.forecast_length = forecast_length
-        self.share_thetas = share_thetas
+        self.share_thetas = share_theta
         self.fc1 = nn.Linear(backcast_length, units)
         self.fc2 = nn.Linear(units, units)
         self.fc3 = nn.Linear(units, units)
