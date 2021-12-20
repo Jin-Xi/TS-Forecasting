@@ -9,7 +9,7 @@ from utils.plot_pred_real import plot_pred_and_real
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
-class features(Dataset):
+class futures(Dataset):
     def __init__(self, root: str = "../Corn.csv", target_col: str = "volume",
                  input_len: int = 50, output_len: int = 5, step: int = -1,
                  data_type: str = "train", split_rate: int = 0.9, is_scale=True):
