@@ -12,7 +12,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 class futures(Dataset):
     def __init__(self, root: str = "../Corn.csv", target_col: str = "volume",
                  input_len: int = 50, output_len: int = 5, step: int = -1,
-                 data_type: str = "train", split_rate: int = 0.9, is_scale=True):
+                 data_type: str = "train", split_rate: float = 0.9, is_scale=True):
         self.input_len = input_len
         self.output_len = output_len
         self.is_scale = is_scale
