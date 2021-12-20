@@ -85,7 +85,7 @@ def test_MLP(net, epoch, vali_dataloader):
         real.append(target)
 
     forecast = torch.cat(forecast, dim=0).cpu().detach().numpy().reshape(-1)
-    real = torch.cat(real, dim=0).cpu().detach().numpy().reshape(-1)
+    real = torch.cat(real, dim=1).cpu().detach().numpy().reshape(-1)
     vali_loss = plot_pred_and_real(forecast, real, epoch)
     return vali_loss
 
