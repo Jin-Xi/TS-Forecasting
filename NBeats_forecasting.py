@@ -26,9 +26,9 @@ def train(model, input_len, output_len):
     # losses_dict = {"MAPE": mape_loss, "MASE": mase_loss, "SMAPE": smape_2_loss}
     loss_fn = torch.nn.MSELoss()
 
-    train_dataset = time_series(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='train')
+    train_dataset = time_series(input_len=input_len, pred_len=output_len, type='train')
     train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    vali_dataset = time_series(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='test')
+    vali_dataset = time_series(input_len=input_len, pred_len=output_len, type='test')
     vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
 
 

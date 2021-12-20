@@ -17,6 +17,7 @@ import logging
 from tqdm import tqdm
 
 from data.datasets.time_series import time_series
+from data.datasets.features import features
 from utils.test_model import test_RNNS as test
 
 from model.MLP import MLP as Net
@@ -25,9 +26,13 @@ from model.MLP import MLP as Net
 def train(net, input_len, output_len):
     optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
     loss_fn = nn.MSELoss()
-    train_dataset = time_series(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='train')
+    # train_dataset = time_series(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='train')
+    # train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+    # vali_dataset = time_series(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='test')
+    # vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
+    train_dataset = features(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='train')
     train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    vali_dataset = time_series(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='test')
+    vali_dataset = features(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='test')
     vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
 
     net.train()

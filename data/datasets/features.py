@@ -23,11 +23,11 @@ class features(Dataset):
 
         if data_type == "test":
             self.data = torch.tensor(self.raw_data[train_len:train_len+test_len])
-            self.step = 1 if step == -1 else step
+            self.step = self.output_len if step == -1 else step
 
         if data_type == "vali":
             self.data = torch.tensor(self.raw_data[train_len+vali_len:train_len+test_len+vali_len])
-            self.step = 1 if step == -1 else step
+            self.step = self.output_len if step == -1 else step
 
     def read_data(self, root: str, target_col: str):
         df = pd.read_csv(root)

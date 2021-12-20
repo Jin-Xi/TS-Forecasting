@@ -48,9 +48,8 @@ def noise(time, noise_level=1, seed=None):
 
 
 class time_series(Dataset):
-    def __init__(self, window_size=60, input_len=50, pred_len=10, type='train'):
-        assert window_size == (input_len + pred_len)
-        self.window_size = window_size
+    def __init__(self, input_len=50, pred_len=10, type='train'):
+        self.window_size = input_len + pred_len
         self.pred_len = pred_len
         self.type = type
         self.input_len = input_len
@@ -101,9 +100,8 @@ class time_series(Dataset):
 
 
 class time_series2(Dataset):
-    def __init__(self, window_size=60, input_len=50, pred_len=10, type='train'):
-        assert window_size == (input_len + pred_len)
-        self.window_size = window_size
+    def __init__(self, input_len=50, pred_len=10, type='train'):
+        self.window_size = input_len + pred_len
         self.pred_len = pred_len
         self.type = type
         self.input_len = input_len
