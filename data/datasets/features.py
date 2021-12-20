@@ -18,15 +18,15 @@ class features(Dataset):
         train_len = int(len(self.raw_data) * split_rate)
         test_len = vali_len = int((1 - split_rate) * len(self.raw_data) * 0.5)
         if data_type == "train":
-            self.data = torch.tensor(self.raw_data[:train_len])
+            self.data = torch.tensor(self.raw_data[:train_len], dtype=torch.float)
             self.step = 1 if step == -1 else step
 
         if data_type == "test":
-            self.data = torch.tensor(self.raw_data[train_len:train_len+test_len])
+            self.data = torch.tensor(self.raw_data[train_len:train_len+test_len], dtype=torch.float)
             self.step = self.output_len if step == -1 else step
 
         if data_type == "vali":
-            self.data = torch.tensor(self.raw_data[train_len+vali_len:train_len+test_len+vali_len])
+            self.data = torch.tensor(self.raw_data[train_len+vali_len:train_len+test_len+vali_len], dtype=torch.float)
             self.step = self.output_len if step == -1 else step
 
     def read_data(self, root: str, target_col: str):

@@ -1,24 +1,11 @@
-import torch
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_percentage_error
-import pandas as pd
-
-import matplotlib.pyplot as plt
-
 from torch.utils.data import Dataset, DataLoader
-import math
-import random
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
-import logging
 from tqdm import tqdm
 
 from data.datasets.time_series import time_series
 from data.datasets.features import features
-from utils.test_model import test_RNNS as test
+from utils.test_model import test_MLP as test
 
 from model.MLP import MLP as Net
 
@@ -26,14 +13,14 @@ from model.MLP import MLP as Net
 def train(net, input_len, output_len):
     optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
     loss_fn = nn.MSELoss()
-    # train_dataset = time_series(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='train')
-    # train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    # vali_dataset = time_series(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='test')
-    # vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
-    train_dataset = features(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='train')
+    train_dataset = time_series(input_len=input_len, pred_len=output_len, type='train')
     train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    vali_dataset = features(window_size=input_len+output_len, input_len=input_len, pred_len=output_len, type='test')
+    vali_dataset = time_series(input_len=input_len, pred_len=output_len, type='test')
     vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
+    # train_dataset = features(root='./data/Corn.csv', input_len=input_len, output_len=output_len, data_type='train')
+    # train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+    # vali_dataset = features(root='./data/Corn.csv', input_len=input_len, output_len=output_len, data_type='vali')
+    # vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
 
     net.train()
     global_step = 0
@@ -42,6 +29,8 @@ def train(net, input_len, output_len):
         total_loss = 0
         train_bar = tqdm(train_dataloader)
         for x, y in train_bar:
+            x = x.cuda()
+            y = y.cuda()
             optimizer.zero_grad()
             out = net(x)
             loss = loss_fn(out, y)
@@ -63,6 +52,6 @@ def train(net, input_len, output_len):
 
 if __name__ == "__main__":
     input_len, output_len = 20, 10
-    net = Net(in_len=input_len, out_len=output_len)
+    net = Net(in_len=input_len, out_len=output_len).cuda()
     train(net, input_len, output_len)
 

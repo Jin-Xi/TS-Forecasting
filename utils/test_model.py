@@ -71,3 +71,21 @@ def test_Transformer(net, epoch, vali_dataloader, pred_len):
     real = torch.cat(real, dim=0).cpu().detach().numpy().reshape(-1)
     vali_loss = plot_pred_and_real(forecast, real, epoch)
     return vali_loss
+
+
+def test_MLP(net, epoch, vali_dataloader):
+    net.eval()
+
+    forecast = []
+    real = []
+
+    for input, target in vali_dataloader:
+        fore = net(input.cuda())
+        forecast.append(fore)
+        real.append(target)
+
+    forecast = torch.cat(forecast, dim=0).cpu().detach().numpy().reshape(-1)
+    real = torch.cat(real, dim=0).cpu().detach().numpy().reshape(-1)
+    vali_loss = plot_pred_and_real(forecast, real, epoch)
+    return vali_loss
+
