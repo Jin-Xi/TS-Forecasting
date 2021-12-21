@@ -6,18 +6,14 @@ class MLP(nn.Module):
     # 简单的BP网络
     def __init__(self, in_len=30, out_len=1):
         super(MLP, self).__init__()
-        self.mu = nn.Linear(in_len, 1)
+        # self.mu = nn.Linear(in_len, 1)
         self.sigma = nn.Linear(in_len, 1)
         self.l1 = nn.Linear(in_len, int(in_len / 2))
         self.relu1 = nn.ReLU()
         self.l2 = nn.Linear(int(in_len / 2), out_len)
 
     def forward(self, x):
-        # mu = self.mu(x)
-        # sigma = self.sigma(x)
-        # x = x / mu + sigma*torch.randn_like(x)
         x = self.l1(x)
         x = self.relu1(x)
         x = self.l2(x)
-        # x = x * mu - sigma*torch.randn_like(x)
         return x.squeeze()

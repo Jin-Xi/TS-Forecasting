@@ -11,8 +11,8 @@ def plot_pred_and_real(pred_data, real_data, epoch, save_img=False):
     plt.grid(True)
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.plot(real_data, "blue", label="real data")
-    plt.plot(pred_data, "green", label='pred data')
+    plt.plot(real_data, "green", label="real data", marker="o")
+    plt.plot(pred_data, "red", label='pred data', marker="*")
     plt.title("[MSE:{}] / [MAPE:{}]".format(mse, mape))
     plt.legend()
     if save_img:

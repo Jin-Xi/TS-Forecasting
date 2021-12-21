@@ -8,6 +8,7 @@ from torch import optim
 # from utils.losses import smape_2_loss, mape_loss, mase_loss
 from model.N_Beats import NBeatsNet
 from data.datasets.time_series import time_series
+from data.datasets.futures import futures
 
 from utils.test_model import test_NBeats as test
 
@@ -26,9 +27,16 @@ def train(model, input_len, output_len):
     # losses_dict = {"MAPE": mape_loss, "MASE": mase_loss, "SMAPE": smape_2_loss}
     loss_fn = torch.nn.MSELoss()
 
-    train_dataset = time_series(input_len=input_len, pred_len=output_len, type='train')
-    train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    vali_dataset = time_series(input_len=input_len, pred_len=output_len, type='test')
+    # train_dataset = time_series(input_len=input_len, pred_len=output_len, type='train')
+    # train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+    # vali_dataset = time_series(input_len=input_len, pred_len=output_len, type='test')
+    # vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
+
+    train_dataset = futures(root='./data/Corn.csv', input_len=input_len, output_len=output_len,
+                            split_rate=0.8, data_type='train')
+    train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+    vali_dataset = futures(root='./data/Corn.csv', input_len=input_len, output_len=output_len,
+                           split_rate=0.8, data_type='vali')
     vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
 
 
@@ -66,11 +74,12 @@ def train(model, input_len, output_len):
         if epoch % 5 == 0:
             vali_loss = test(model, epoch, vali_dataloader)
             scheduler.step(vali_loss)
-
+    
 
 if __name__ == "__main__":
-    input_len = 20
-    output_len = 40
+    # 不要设置过大除非数据集够长
+    input_len = 50
+    output_len = 5
     model = NBeatsNet(backcast_length=input_len, forecast_length=output_len,
                       stack_types=(NBeatsNet.SEASONALITY_BLOCK, NBeatsNet.TREND_BLOCK, NBeatsNet.GENERIC_BLOCK),
                       nb_blocks_per_stack=3,

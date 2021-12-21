@@ -22,6 +22,8 @@ class futures(Dataset):
 
         # 初始化一个scaler
         self.scaler = StandardScaler()
+        if is_scale:
+            self.raw_data = self.scaler.fit_transform(self.raw_data.reshape(-1, 1)).reshape(-1)
 
         if data_type == "train":
             self.data = self.raw_data[:train_len]
@@ -46,9 +48,9 @@ class futures(Dataset):
         window = self.data[start_index: end_index]
         input_data = window[:self.input_len]
         output_data = window[self.input_len:]
-        if self.is_scale:
-            input_data = self.scaler.fit_transform(input_data.reshape(-1, 1)).reshape(-1)
-            output_data = self.scaler.fit_transform(output_data.reshape(-1, 1)).reshape(-1)
+        # if self.is_scale:
+        #     input_data = self.scaler.fit_transform(input_data.reshape(-1, 1)).reshape(-1)
+        #     output_data = self.scaler.fit_transform(output_data.reshape(-1, 1)).reshape(-1)
         input_data = torch.tensor(input_data, dtype=torch.float)
         output_data = torch.tensor(output_data, dtype=torch.float)
         return input_data.float(), output_data.float()
@@ -58,12 +60,15 @@ class futures(Dataset):
 
 
 if __name__ == '__main__':
-    dataset = features(data_type='test')
-    print(len(dataset))
-    dataloader = DataLoader(dataset, batch_size=1)
+    train_dataset = futures(root='../Corn.csv', input_len=30, output_len=10,
+                            split_rate=0.98, data_type='train')
+    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+    vali_dataset = futures(root='../Corn.csv', input_len=20, output_len=10,
+                           split_rate=0.98, data_type='vali')
+    vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
 
     outputs = []
-    for input_data, output_data in dataloader:
+    for input_data, output_data in vali_dataloader:
         outputs.append(output_data)
     outputs = torch.cat(outputs, dim=1).cpu().detach().numpy().reshape(-1)
     vali_loss = plot_pred_and_real(outputs, outputs, 1)

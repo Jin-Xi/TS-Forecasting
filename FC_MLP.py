@@ -4,7 +4,7 @@ import torch.nn as nn
 from tqdm import tqdm
 
 from data.datasets.time_series import time_series
-from data.datasets.features import features
+from data.datasets.futures import futures
 from utils.test_model import test_MLP as test
 
 from model.MLP import MLP as Net
@@ -17,9 +17,11 @@ def train(net, input_len, output_len):
     # train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
     # vali_dataset = time_series(input_len=input_len, pred_len=output_len, type='test')
     # vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
-    train_dataset = features(root='./data/Corn.csv', input_len=input_len, output_len=output_len, data_type='train')
-    train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    vali_dataset = features(root='./data/Corn.csv', input_len=input_len, output_len=output_len, data_type='vali')
+    train_dataset = futures(root='./data/Corn.csv', input_len=input_len, output_len=output_len,
+                            split_rate=0.98, data_type='train')
+    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+    vali_dataset = futures(root='./data/Corn.csv', input_len=input_len, output_len=output_len,
+                           split_rate=0.98, data_type='vali')
     vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
 
     net.train()
@@ -33,7 +35,7 @@ def train(net, input_len, output_len):
             y = y.cuda()
             optimizer.zero_grad()
             out = net(x)
-            loss = loss_fn(out, y)
+            loss = loss_fn(out, y.squeeze())
             loss.backward()
 
             count += 1

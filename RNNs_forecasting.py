@@ -18,6 +18,7 @@ from tqdm import tqdm
 from utils.plot_pred_real import plot_pred_and_real
 from utils.test_model import test_RNNS as test
 from data.datasets.time_series import time_series
+from data.datasets.futures import futures
 from model.RNNS import Net
 
 
@@ -25,10 +26,17 @@ def train(model, input_len, output_len):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     loss_fn = nn.MSELoss()
 
-    train_dataset = time_series(input_len=input_len, pred_len=output_len, type='train')
-    train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    vali_dataset = time_series(input_len=input_len, pred_len=output_len, type='test')
+    # train_dataset = time_series(input_len=input_len, pred_len=output_len, type='train')
+    # train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+    # vali_dataset = time_series(input_len=input_len, pred_len=output_len, type='test')
+    # vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
+    train_dataset = futures(root='./data/Corn.csv', input_len=input_len, output_len=output_len,
+                            split_rate=0.8, data_type='train')
+    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    vali_dataset = futures(root='./data/Corn.csv', input_len=input_len, output_len=output_len,
+                           split_rate=0.8, data_type='vali')
     vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
+
 
     global_step = 0
     for epoch in range(1000):
@@ -61,6 +69,6 @@ def train(model, input_len, output_len):
 
 
 if __name__ == "__main__":
-    input_len, output_len = 5, 1
+    input_len, output_len = 50, 5
     net = Net(in_size=input_len, embd_size=40, out_size=output_len, layer_num=3).cuda()
     train(net, input_len, output_len)

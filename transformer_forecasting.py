@@ -8,7 +8,8 @@ from tqdm import tqdm
 from sklearn.preprocessing import MinMaxScaler
 
 from utils.test_model import test_Transformer as test
-from data.datasets.time_series import time_series2 as time_series
+from data.datasets.time_series import time_series2
+from data.datasets.futures import futures
 from model.Transformer import time_Transformer as Net
 
 """
@@ -23,10 +24,17 @@ def train(net, input_len, output_len, decoder_len):
     optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
     loss_fn = nn.MSELoss()
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
-    train_dataset = time_series(input_len=input_len, pred_len=output_len, type='train')
-    train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-    vali_dataset = time_series(input_len=input_len, pred_len=output_len, type='test')
+    # train_dataset = time_series(input_len=input_len, pred_len=output_len, type='train')
+    # train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+    # vali_dataset = time_series(input_len=input_len, pred_len=output_len, type='test')
+    # vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
+    train_dataset = futures(root='./data/Corn.csv', input_len=input_len, output_len=output_len,
+                            split_rate=0.8, data_type='train')
+    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    vali_dataset = futures(root='./data/Corn.csv', input_len=input_len, output_len=output_len,
+                           split_rate=0.8, data_type='vali')
     vali_dataloader = DataLoader(vali_dataset, batch_size=1, shuffle=False)
+
     global_step = 0
 
     # train
@@ -66,7 +74,7 @@ def train(net, input_len, output_len, decoder_len):
 
 
 if __name__ == "__main__":
-    input_len, output_len, decoder_len = 200, 40, 80
+    input_len, output_len, decoder_len = 50, 5, 20
     model = Net(feature_size=256, num_layers=1, dropout=0.1,
                 pred_len=output_len, encoder_len=input_len, decoder_len=decoder_len,
                 device=device).cuda()
